@@ -9,12 +9,14 @@ import Spinner from '../../components/UI/Spinner/Spinner';
 import withErrorHandler from '../../hoc/withErrorHandler/withErrorHandler';
 import axios from '../../axios-order';
 
+
 const INGREDIENT_PRICES = {
     salad: 0.5,
     cheese: 0.4,
     meat: 1.3,
     bacon: 0.7
 }
+
 
 class BurgerBuilder extends Component {
     state = {
@@ -30,23 +32,26 @@ class BurgerBuilder extends Component {
         axios.get('https://react-my-burger-f2141.firebaseio.com/ingredients.json')
             .then(response => {
                 const updatedIngredients = response.data
-                
-                let price = 4;
-                price = Object.keys(updatedIngredients)
-                .map(ingredient => {
-                    return updatedIngredients[ingredient] * INGREDIENT_PRICES[ingredient]
-                })
-                .reduce((sum, el) => {
-                    return sum = sum + el;
-                }, price);
-                
-                this.setState({ ingredients: updatedIngredients, totalPrice: price });
-                this.updatePurchaseState(updatedIngredients);
+                this.setState({ ingredients: updatedIngredients });
+                this.updatePrice(updatedIngredients);
             })
             .catch(error => {
                 console.log("ERROR RETRIEVING INGREDIENTS FROM SERVER " + error);
                 this.setState({ error: true });
             });
+    }
+
+    updatePrice = (ingredients) => {
+        let price = 4;
+        price = Object.keys(ingredients)
+            .map(ingredient => {
+                return ingredients[ingredient] * INGREDIENT_PRICES[ingredient]
+            })
+            .reduce((sum, el) => {
+                return sum = sum + el;
+            }, price);
+        this.setState({ totalPrice: price });
+        this.updatePurchaseState(ingredients);
     }
 
     updatePurchaseState = (ingredients) => {
@@ -68,11 +73,8 @@ class BurgerBuilder extends Component {
             ...this.state.ingredients
         };
         updatedIngredients[type] = updatedCount;
-        const priceAddition = INGREDIENT_PRICES[type];
-        const oldPrice = this.state.totalPrice;
-        const newPrice = oldPrice + priceAddition;
-        this.setState({ totalPrice: newPrice, ingredients: updatedIngredients });
-        this.updatePurchaseState(updatedIngredients);
+        this.setState({ ingredients: updatedIngredients });
+        this.updatePrice(updatedIngredients);
     }
 
     removeIngredientHandler = (type) => {
@@ -85,11 +87,8 @@ class BurgerBuilder extends Component {
             ...this.state.ingredients
         };
         updatedIngredients[type] = updatedCount;
-        const priceDeduction = INGREDIENT_PRICES[type];
-        const oldPrice = this.state.totalPrice;
-        const newPrice = oldPrice - priceDeduction;
-        this.setState({ totalPrice: newPrice, ingredients: updatedIngredients });
-        this.updatePurchaseState(updatedIngredients);
+        this.setState({ ingredients: updatedIngredients });
+        this.updatePrice(updatedIngredients);
     }
 
     purchaseHandler = () => {
